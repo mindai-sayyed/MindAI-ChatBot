@@ -1,0 +1,145 @@
+<!-- HTML & CSS in one for CodePen -->
+<style>
+  body {
+    margin: 0;
+    background-color: #1e1e1e;
+    color: #ffffff;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  header {
+    background-color: #121212;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #333;
+  }
+
+  header img {
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  header h1 {
+    font-size: 20px;
+    margin: 0;
+    color: #f0f0f0;
+  }
+
+  #chat-box {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .msg {
+    padding: 10px 16px;
+    border-radius: 10px;
+    max-width: 80%;
+    word-wrap: break-word;
+  }
+
+  .user {
+    align-self: flex-end;
+    background-color: #005eff;
+  }
+
+  .bot {
+    align-self: flex-start;
+    background-color: #2e2e2e;
+  }
+
+  .input-area {
+    display: flex;
+    border-top: 1px solid #333;
+    padding: 12px;
+    background-color: #121212;
+  }
+
+  .input-area input {
+    flex: 1;
+    background-color: #2e2e2e;
+    border: none;
+    color: white;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+
+  .input-area button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    margin-left: 8px;
+  }
+
+  .input-area button img {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1);
+  }
+</style>
+
+<header>
+  <img src="https://cdn-icons-png.flaticon.com/512/4712/4712100.png" alt="MindAI Logo" />
+  <h1>MindAI Chatbot</h1>
+</header>
+
+<div id="chat-box"></div>
+
+<div class="input-area">
+  <input id="prompt" placeholder="Ask anything..." />
+  <button onclick="ask()">
+    <img src="https://cdn-icons-png.flaticon.com/512/271/271228.png" alt="Send" />
+  </button>
+</div>
+
+<script>
+  const chatBox = document.getElementById('chat-box');
+
+  function appendMessage(text, sender) {
+    const div = document.createElement("div");
+    div.className = `msg ${sender}`;
+    div.innerText = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  async function ask() {
+    const input = document.getElementById("prompt");
+    const question = input.value.trim();
+    if (!question) return;
+
+    appendMessage(question, "user");
+    input.value = "";
+    appendMessage("Typing...", "bot");
+
+    try {
+      const res = await fetch("https://mindai-backend.glitch.me/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: question })
+      });
+
+      const data = await res.json();
+      document.querySelectorAll(".bot").forEach(el => {
+        if (el.innerText === "Typing...") el.remove();
+      });
+
+      appendMessage(data.output || "⚠️ No response", "bot");
+    } catch {
+      appendMessage("❌ Error reaching MindAI", "bot");
+    }
+  }
+
+  document.getElementById("prompt").addEventListener("keypress", function (e) {
+    if (e.key === "Enter") ask();
+  });
+</script>
